@@ -9,7 +9,7 @@ import 'package:skz_player/src/widgets/controls_widget.dart';
 import 'package:skz_player/src/widgets/video_widget.dart';
 
 import 'package:video_player/video_player.dart';
-import 'package:wakelock/wakelock.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class SkzPlayer extends StatefulWidget {
   ///Video[source],
@@ -149,14 +149,14 @@ class _SkzPlayerState extends State<SkzPlayer>
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
-    Wakelock.enable();
+    WakelockPlus.enable();
   }
 
   @override
   void dispose() {
     super.dispose();
     controller!.dispose();
-    Wakelock.disable();
+    WakelockPlus.disable();
   }
 
   @override
@@ -254,8 +254,8 @@ class _SkzPlayerState extends State<SkzPlayer>
   void listener() async {
     _updateState();
     if (controller!.value.isInitialized && controller!.value.isPlaying) {
-      if (!await Wakelock.enabled) {
-        await Wakelock.enable();
+      if (!await WakelockPlus.enabled) {
+        await WakelockPlus.enable();
       }
       setState(() {
         videoDuration = convertDurationToString(controller!.value.duration);
@@ -264,8 +264,8 @@ class _SkzPlayerState extends State<SkzPlayer>
         videoDurationSecond = controller!.value.duration.inSeconds.toDouble();
       });
     } else {
-      if (await Wakelock.enabled) {
-        await Wakelock.disable();
+      if (await WakelockPlus.enabled) {
+        await WakelockPlus.disable();
         setState(() {});
       }
     }
