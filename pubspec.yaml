@@ -1,6 +1,6 @@
 name: skz_player
 description: "A plugin for watch videos"
-version: 0.0.2
+version: 0.0.3
 homepage: https://github.com/josemangandid/skz_player.git
 
 environment:
