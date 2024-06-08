@@ -55,6 +55,9 @@ class SkzPlayer extends StatefulWidget {
 
 class _SkzPlayerState extends State<SkzPlayer>
     with SingleTickerProviderStateMixin {
+  //Widget VideoPlayer
+  late _VideoPlayer videoPlayer;
+
   // Animation Controller
   late AnimationController controlBarAnimationController;
 
@@ -113,6 +116,8 @@ class _SkzPlayerState extends State<SkzPlayer>
 
   Timer? _hideTimer;
 
+  OverlayEntry? _overlayEntry;
+
   @override
   void initState() {
     super.initState();
@@ -162,39 +167,56 @@ class _SkzPlayerState extends State<SkzPlayer>
   @override
   Widget build(BuildContext context) {
     _wasLoading = (isLoading(_latestValue) || !controller!.value.isInitialized);
-    return AspectRatio(
-      aspectRatio:
-          fullScreen ? calculateAspectRatio(screenSize) : widget.aspectRatio,
-      child: Stack(
-        children: [
-          VideoWidget(
-            controller: controller,
-            onTap: () => toggleControls(),
-            onDoubleTap: () => togglePlay(),
-          ),
-          ControlsWidget(
-            videoSeek: "$videoSeek",
-            videoDuration: "$videoDuration",
-            style: videoLoadingStyle,
-            videoStyle: videoStyle,
-            controller: controller!,
-            showMenu: showMenu,
-            wasLoading: _wasLoading,
-            fullScreen: fullScreen,
-            toggleControls: toggleControls,
-            togglePlay: togglePlay,
-            toggleFullScreen: toggleFullScreen,
-            onDragEnd: _startHideTimer,
-            onTapDown: cancelAndRestartTimer,
-            onToNextVideo: widget.onToNextVideo,
-            onDragStart: () {
-              _hideTimer?.cancel();
-            },
-          )
-        ],
-      ),
+    videoPlayer = _VideoPlayer(
+      aspectRatio: fullScreen ? calculateAspectRatio(screenSize) : widget.aspectRatio,
+      controller: controller!,
+      toggleControls: toggleControls,
+      togglePlay: togglePlay,
+      videoSeek: "$videoSeek",
+      videoDuration: "$videoDuration",
+      videoStyle: videoStyle,
+      showMenu: showMenu,
+      wasLoading: _wasLoading,
+      fullScreen: fullScreen,
+      toggleFullScreen: toggleFullScreen,
+      onToNextVideo: widget.onToNextVideo,
+      screenSize: screenSize,
+      videoLoadingStyle: videoLoadingStyle,
+      startHideTimer: _startHideTimer,
+      cancelAndRestartTimer: cancelAndRestartTimer,
+      onDragStart: () {
+        _hideTimer?.cancel();
+      },
     );
+    return videoPlayer;
   }
+
+  void _enterFullScreen(BuildContext context) {
+    _overlayEntry = OverlayEntry(builder: (context) {
+      return Positioned.fill(
+          child: Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: videoPlayer
+        ),
+      ));
+    });
+
+    Overlay.of(context).insert(_overlayEntry!);
+    // Overlay.of(context).insert(
+    //   OverlayEntry(
+    //     builder: (context) => Positioned.fill(
+    //       child: videoPlayer(),
+    //     ),
+    //   ),
+    // );
+  }
+
+  void _exitFullScreen(BuildContext context) {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
 
   static const int _bufferingInterval = 20000;
 
@@ -308,12 +330,11 @@ class _SkzPlayerState extends State<SkzPlayer>
   }
 
   void videoInit(String? url) async {
-    controller =
-        VideoPlayerController.networkUrl(Uri.parse(url!))
-          ..initialize().then((value) {
-            startAt();
-            setState(() => hasInitError = false);
-          }).catchError((e) => setState(() => hasInitError = true));
+    controller = VideoPlayerController.networkUrl(Uri.parse(url!))
+      ..initialize().then((value) {
+        startAt();
+        setState(() => hasInitError = false);
+      }).catchError((e) => setState(() => hasInitError = true));
   }
 
   void startAt() async {
@@ -383,13 +404,90 @@ class _SkzPlayerState extends State<SkzPlayer>
 
   void toggleFullScreen() {
     if (fullScreen) {
+      _exitFullScreen(context);
       SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
           overlays: SystemUiOverlay.values);
     } else {
-      SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeRight]);
+      SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft]);
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
+      _enterFullScreen(context);
     }
     _fullscreen = !_fullscreen;
+  }
+}
+
+class _VideoPlayer extends StatelessWidget {
+  const _VideoPlayer({
+    super.key,
+    required this.fullScreen,
+    required this.aspectRatio,
+    required this.screenSize,
+    required this.controller,
+    required this.toggleControls,
+    required this.togglePlay,
+    required this.videoSeek,
+    required this.videoDuration,
+    required this.videoLoadingStyle,
+    required this.videoStyle,
+    required this.showMenu,
+    required this.wasLoading,
+    required this.toggleFullScreen,
+    required this.startHideTimer,
+    required this.cancelAndRestartTimer,
+    required this.onDragStart,
+    this.onToNextVideo,
+  });
+
+  final bool fullScreen;
+  final bool showMenu;
+  final bool wasLoading;
+  final Size screenSize;
+  final double aspectRatio;
+  final String videoSeek;
+  final String videoDuration;
+  final VideoLoadingStyle videoLoadingStyle;
+  final VideoStyle videoStyle;
+  final VideoPlayerController controller;
+
+  final Function() toggleFullScreen;
+  final Function() startHideTimer;
+  final Function() cancelAndRestartTimer;
+  final Function() onDragStart;
+  final Function()? onToNextVideo;
+  final Function() toggleControls;
+  final Function() togglePlay;
+
+  @override
+  Widget build(BuildContext context) {
+    return AspectRatio(
+      aspectRatio: fullScreen ? calculateAspectRatio(screenSize) : aspectRatio,
+      child: Stack(
+        children: [
+          VideoWidget(
+            controller: controller,
+            onTap: toggleControls,
+            onDoubleTap: togglePlay,
+          ),
+          ControlsWidget(
+            videoSeek: videoSeek,
+            videoDuration: videoDuration,
+            style: videoLoadingStyle,
+            videoStyle: videoStyle,
+            controller: controller,
+            showMenu: showMenu,
+            wasLoading: wasLoading,
+            fullScreen: fullScreen,
+            toggleControls: toggleControls,
+            togglePlay: togglePlay,
+            toggleFullScreen: toggleFullScreen,
+            onDragEnd: startHideTimer,
+            onTapDown: cancelAndRestartTimer,
+            onToNextVideo: onToNextVideo,
+            onDragStart: onDragStart,
+          )
+        ],
+      ),
+    );
   }
 }

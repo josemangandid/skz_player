@@ -31,9 +31,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        appBar: isFullScreen
-            ? null
-            : AppBar(title: const Text('SkzPlayer Example')),
+        appBar: AppBar(title: const Text('SkzPlayer Example')),
         body: Center(
           child: SkzPlayer(
             url: MyApp.url,
