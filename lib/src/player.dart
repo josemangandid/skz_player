@@ -1,10 +1,13 @@
 import 'dart:async';
 
+import 'package:cast/cast.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:skz_player/src/source/video_loading_style.dart';
 import 'package:skz_player/src/source/video_style.dart';
 import 'package:skz_player/src/utils/utils.dart';
+import 'package:skz_player/src/widgets/cast_dialog.dart';
 import 'package:skz_player/src/widgets/controls_widget.dart';
 import 'package:skz_player/src/widgets/video_widget.dart';
 
@@ -17,6 +20,11 @@ class SkzPlayer extends StatefulWidget {
   ///url:"https://example.com/index.m3u8";
   ///```
   final String url;
+
+  final String? videoTitle;
+
+  /// Google Cast Id
+  final String? appCastId;
 
   final VideoStyle? videoStyle;
 
@@ -42,11 +50,13 @@ class SkzPlayer extends StatefulWidget {
     required this.url,
     this.aspectRatio = 16 / 9,
     this.startAt,
+    this.appCastId,
     this.onFullScreen,
     this.videoLoadingStyle,
     this.position,
     this.onToNextVideo,
     this.videoStyle,
+    this.videoTitle,
   });
 
   @override
@@ -55,6 +65,9 @@ class SkzPlayer extends StatefulWidget {
 
 class _SkzPlayerState extends State<SkzPlayer>
     with SingleTickerProviderStateMixin {
+  //Chromecast Controller
+  ChromecastController? chromecastController;
+
   //Widget VideoPlayer
   late _VideoPlayer videoPlayer;
 
@@ -118,9 +131,19 @@ class _SkzPlayerState extends State<SkzPlayer>
 
   OverlayEntry? _overlayEntry;
 
+  int currentPosition = 0;
+
+  CastSessionState? sessionState;
+
   @override
   void initState() {
     super.initState();
+    if (widget.appCastId != null) {
+      chromecastController = ChromecastController();
+      chromecastController?.currentTimeNotifier
+          .addListener(_currentTimeListener);
+      chromecastController?.sessionState.addListener(_sessionStateListener);
+    }
     videoLoadingStyle = widget.videoLoadingStyle ?? VideoLoadingStyle();
     videoStyle = widget.videoStyle ?? VideoStyle();
     videoControlSetup(widget.url);
@@ -161,15 +184,56 @@ class _SkzPlayerState extends State<SkzPlayer>
   void dispose() {
     super.dispose();
     controller!.dispose();
+    chromecastController?.closeSession();
     WakelockPlus.disable();
+  }
+
+  void _currentTimeListener() {
+    int value = chromecastController?.currentTimeNotifier.value ?? 0;
+    if (value >= currentPosition) {
+      currentPosition = value;
+      if( widget.position != null){
+        widget.position!(currentPosition);
+        if(currentPosition == controller!.value.duration.inSeconds){
+          chromecastController?.closeSession();
+        }
+      }
+    }
+  }
+
+  void _sessionStateListener() async {
+    setState(() {
+      sessionState = chromecastController?.sessionState.value;
+    });
+    if (sessionState ==
+        CastSessionState.connected) {
+      createHideControlBarTimer();
+      if (controller!.value.isPlaying) {
+        controller!.pause();
+      }
+      _updateState();
+
+    } else if (sessionState ==
+        CastSessionState.closed) {
+      await controller!.seekTo(Duration(seconds: currentPosition));
+      _updateState();
+
+    }
+
   }
 
   @override
   Widget build(BuildContext context) {
     _wasLoading = (isLoading(_latestValue) || !controller!.value.isInitialized);
     videoPlayer = _VideoPlayer(
-      aspectRatio: fullScreen ? calculateAspectRatio(screenSize) : widget.aspectRatio,
+      closeChromecast: () {
+        chromecastController?.closeSession();
+      },
+      castSessionState: sessionState,
+      aspectRatio:
+          fullScreen ? calculateAspectRatio(screenSize) : widget.aspectRatio,
       controller: controller!,
+      appCastId: widget.appCastId,
       toggleControls: toggleControls,
       togglePlay: togglePlay,
       videoSeek: "$videoSeek",
@@ -187,8 +251,35 @@ class _SkzPlayerState extends State<SkzPlayer>
       onDragStart: () {
         _hideTimer?.cancel();
       },
+      onTapCastBtn: _onTapCastBtn,
     );
     return videoPlayer;
+  }
+
+  void _onTapCastBtn() async {
+
+    if(fullScreen) toggleFullScreen();
+    createHideControlBarTimer();
+    if (controller!.value.isPlaying) {
+      controller!.pause();
+    }
+    if(fullScreen) await Future.delayed(const Duration(milliseconds: 900));
+    showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          title: const Text('TV(Chromecast)', style: TextStyle(color: Colors.black, fontSize: 18),),
+          content: CastDialog(
+            appId: widget.appCastId!,
+            url: widget.url,
+            videoTitle: widget.videoTitle!,
+            startAt: currentPosition,
+            controller: chromecastController!,
+          ),
+        );
+      },
+    );
+
   }
 
   void _enterFullScreen(BuildContext context) {
@@ -196,9 +287,7 @@ class _SkzPlayerState extends State<SkzPlayer>
       return Positioned.fill(
           child: Scaffold(
         backgroundColor: Colors.black,
-        body: Center(
-          child: videoPlayer
-        ),
+        body: Center(child: videoPlayer),
       ));
     });
 
@@ -216,7 +305,6 @@ class _SkzPlayerState extends State<SkzPlayer>
     _overlayEntry?.remove();
     _overlayEntry = null;
   }
-
 
   static const int _bufferingInterval = 20000;
 
@@ -297,7 +385,8 @@ class _SkzPlayerState extends State<SkzPlayer>
     if (mounted) {
       if (controller!.value.position.inSeconds != _position &&
           widget.position != null) {
-        widget.position!(controller!.value.position.inSeconds);
+        currentPosition = controller!.value.position.inSeconds;
+        widget.position!(currentPosition);
       }
       if (isVideoFinished(controller!.value) ||
           _wasLoading ||
@@ -437,6 +526,11 @@ class _VideoPlayer extends StatelessWidget {
     required this.cancelAndRestartTimer,
     required this.onDragStart,
     this.onToNextVideo,
+    this.appCastId,
+    this.videoTitle,
+    required this.onTapCastBtn,
+    required this.closeChromecast,
+    this.castSessionState,
   });
 
   final bool fullScreen;
@@ -446,9 +540,12 @@ class _VideoPlayer extends StatelessWidget {
   final double aspectRatio;
   final String videoSeek;
   final String videoDuration;
+  final String? appCastId;
+  final String? videoTitle;
   final VideoLoadingStyle videoLoadingStyle;
   final VideoStyle videoStyle;
   final VideoPlayerController controller;
+  final CastSessionState? castSessionState;
 
   final Function() toggleFullScreen;
   final Function() startHideTimer;
@@ -457,6 +554,8 @@ class _VideoPlayer extends StatelessWidget {
   final Function()? onToNextVideo;
   final Function() toggleControls;
   final Function() togglePlay;
+  final Function() onTapCastBtn;
+  final Function() closeChromecast;
 
   @override
   Widget build(BuildContext context) {
@@ -469,7 +568,29 @@ class _VideoPlayer extends StatelessWidget {
             onTap: toggleControls,
             onDoubleTap: togglePlay,
           ),
-          ControlsWidget(
+          castSessionState == CastSessionState.connected ?  Center(
+            child: InkWell(
+              onTap: closeChromecast,
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text("Cerrar Chromecast",style: TextStyle(color: Colors.white),),
+                    SizedBox(width: 10,),
+                    Icon(Icons.cast_outlined, color: Colors.white,)
+                  ],
+                ),
+              ),
+            ),
+          ):ControlsWidget(
+            onTapCastBtn: onTapCastBtn,
+            videoTitle: videoTitle,
+            appCastId: appCastId,
             videoSeek: videoSeek,
             videoDuration: videoDuration,
             style: videoLoadingStyle,

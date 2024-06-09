@@ -2,6 +2,7 @@ name: skz_player
 description: "A plugin for watch videos"
 version: 0.0.3
 homepage: https://github.com/josemangandid/skz_player.git
+publish_to: none
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -12,6 +13,10 @@ dependencies:
     sdk: flutter
   video_player: ^2.8.6
   wakelock_plus: ^1.2.5
+  cast:
+    git:
+      url: https://github.com/josemangandid/flutter_cast.git
+      ref: 2c6b21f9cc5b866666012044b0d1627d703a0aad
 
 dev_dependencies:
   flutter_test:
