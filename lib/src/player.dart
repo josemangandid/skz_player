@@ -135,6 +135,8 @@ class _SkzPlayerState extends State<SkzPlayer>
 
   CastSessionState? sessionState;
 
+  bool isOpenCastDialog = false;
+
   @override
   void initState() {
     super.initState();
@@ -192,9 +194,9 @@ class _SkzPlayerState extends State<SkzPlayer>
     int value = chromecastController?.currentTimeNotifier.value ?? 0;
     if (value >= currentPosition) {
       currentPosition = value;
-      if( widget.position != null){
+      if (widget.position != null) {
         widget.position!(currentPosition);
-        if(currentPosition == controller!.value.duration.inSeconds){
+        if (currentPosition == controller!.value.duration.inSeconds) {
           chromecastController?.closeSession();
         }
       }
@@ -205,27 +207,25 @@ class _SkzPlayerState extends State<SkzPlayer>
     setState(() {
       sessionState = chromecastController?.sessionState.value;
     });
-    if (sessionState ==
-        CastSessionState.connected) {
+    if (sessionState == CastSessionState.connected) {
       createHideControlBarTimer();
       if (controller!.value.isPlaying) {
         controller!.pause();
       }
+      isOpenCastDialog = false;
       _updateState();
-
-    } else if (sessionState ==
-        CastSessionState.closed) {
+    } else if (sessionState == CastSessionState.closed) {
       await controller!.seekTo(Duration(seconds: currentPosition));
       _updateState();
-
     }
-
   }
 
   @override
   Widget build(BuildContext context) {
     _wasLoading = (isLoading(_latestValue) || !controller!.value.isInitialized);
     videoPlayer = _VideoPlayer(
+      castDialog: castDialog(),
+      isOpenCastDialog: isOpenCastDialog,
       closeChromecast: () {
         chromecastController?.closeSession();
       },
@@ -257,29 +257,34 @@ class _SkzPlayerState extends State<SkzPlayer>
   }
 
   void _onTapCastBtn() async {
-
-    if(fullScreen) toggleFullScreen();
+    if (fullScreen) toggleFullScreen();
     createHideControlBarTimer();
+    chromecastController?.devicesNotifier.value = [];
     if (controller!.value.isPlaying) {
       controller!.pause();
     }
-    if(fullScreen) await Future.delayed(const Duration(milliseconds: 900));
-    showDialog(
-      context: context,
-      builder: (_) {
-        return AlertDialog(
-          title: const Text('TV(Chromecast)', style: TextStyle(color: Colors.black, fontSize: 18),),
-          content: CastDialog(
-            appId: widget.appCastId!,
-            url: widget.url,
-            videoTitle: widget.videoTitle!,
-            startAt: currentPosition,
-            controller: chromecastController!,
-          ),
-        );
+
+    if (fullScreen) await Future.delayed(const Duration(milliseconds: 900));
+
+    setState(() {
+      isOpenCastDialog = true;
+    });
+  }
+
+  Widget castDialog() {
+    return CastDialog(
+      isFullScreen: fullScreen,
+      appId: widget.appCastId!,
+      url: widget.url,
+      videoTitle: widget.videoTitle!,
+      startAt: currentPosition,
+      controller: chromecastController!,
+      closeDialog: () {
+        setState(() {
+          isOpenCastDialog = false;
+        });
       },
     );
-
   }
 
   void _enterFullScreen(BuildContext context) {
@@ -531,6 +536,8 @@ class _VideoPlayer extends StatelessWidget {
     required this.onTapCastBtn,
     required this.closeChromecast,
     this.castSessionState,
+    required this.isOpenCastDialog,
+    required this.castDialog,
   });
 
   final bool fullScreen;
@@ -546,6 +553,7 @@ class _VideoPlayer extends StatelessWidget {
   final VideoStyle videoStyle;
   final VideoPlayerController controller;
   final CastSessionState? castSessionState;
+  final bool isOpenCastDialog;
 
   final Function() toggleFullScreen;
   final Function() startHideTimer;
@@ -556,6 +564,7 @@ class _VideoPlayer extends StatelessWidget {
   final Function() togglePlay;
   final Function() onTapCastBtn;
   final Function() closeChromecast;
+  final Widget castDialog;
 
   @override
   Widget build(BuildContext context) {
@@ -568,45 +577,60 @@ class _VideoPlayer extends StatelessWidget {
             onTap: toggleControls,
             onDoubleTap: togglePlay,
           ),
-          castSessionState == CastSessionState.connected ?  Center(
-            child: InkWell(
-              onTap: closeChromecast,
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text("Cerrar Chromecast",style: TextStyle(color: Colors.white),),
-                    SizedBox(width: 10,),
-                    Icon(Icons.cast_outlined, color: Colors.white,)
-                  ],
-                ),
-              ),
-            ),
-          ):ControlsWidget(
-            onTapCastBtn: onTapCastBtn,
-            videoTitle: videoTitle,
-            appCastId: appCastId,
-            videoSeek: videoSeek,
-            videoDuration: videoDuration,
-            style: videoLoadingStyle,
-            videoStyle: videoStyle,
-            controller: controller,
-            showMenu: showMenu,
-            wasLoading: wasLoading,
-            fullScreen: fullScreen,
-            toggleControls: toggleControls,
-            togglePlay: togglePlay,
-            toggleFullScreen: toggleFullScreen,
-            onDragEnd: startHideTimer,
-            onTapDown: cancelAndRestartTimer,
-            onToNextVideo: onToNextVideo,
-            onDragStart: onDragStart,
-          )
+          castSessionState == CastSessionState.connected
+              ? Container(
+                  color: Colors.black38,
+                  child: Center(
+                    child: InkWell(
+                      onTap: closeChromecast,
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[850],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              "Cerrar Chromecast",
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                            SizedBox(
+                              width: 10,
+                            ),
+                            Icon(
+                              Icons.cast_outlined,
+                              color: Colors.grey,
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              : ControlsWidget(
+                  castDialog: castDialog,
+                  onTapCastBtn: onTapCastBtn,
+                  videoTitle: videoTitle,
+                  appCastId: appCastId,
+                  videoSeek: videoSeek,
+                  videoDuration: videoDuration,
+                  style: videoLoadingStyle,
+                  videoStyle: videoStyle,
+                  controller: controller,
+                  showMenu: showMenu,
+                  wasLoading: wasLoading,
+                  fullScreen: fullScreen,
+                  toggleControls: toggleControls,
+                  togglePlay: togglePlay,
+                  toggleFullScreen: toggleFullScreen,
+                  onDragEnd: startHideTimer,
+                  onTapDown: cancelAndRestartTimer,
+                  onToNextVideo: onToNextVideo,
+                  onDragStart: onDragStart,
+                  isOpenCastDialog: isOpenCastDialog,
+                )
         ],
       ),
     );
