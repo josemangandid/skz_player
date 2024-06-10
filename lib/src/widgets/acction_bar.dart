@@ -33,7 +33,17 @@ class ActionBar extends StatelessWidget {
                   Container(
                     width: 5,
                   ),
-                  if(appCastId!= null)CastBtn(onTap: onTapCastBtn),
+                  if(appCastId!= null)InkWell(
+                    onTap: onTapCastBtn,
+                    child: Padding(
+                      padding: EdgeInsets.all(fullScreen ? 20.0 : 10.0),
+                      child: Icon(
+                        Icons.cast,
+                        color: Colors.white,
+                        size: fullScreen ? 35 : 25,
+                      ),
+                    ),
+                  ),
                   Container(
                     width: 5,
                   ),

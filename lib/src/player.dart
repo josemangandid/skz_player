@@ -68,9 +68,6 @@ class _SkzPlayerState extends State<SkzPlayer>
   //Chromecast Controller
   ChromecastController? chromecastController;
 
-  //Widget VideoPlayer
-  late _VideoPlayer videoPlayer;
-
   // Animation Controller
   late AnimationController controlBarAnimationController;
 
@@ -223,37 +220,36 @@ class _SkzPlayerState extends State<SkzPlayer>
   @override
   Widget build(BuildContext context) {
     _wasLoading = (isLoading(_latestValue) || !controller!.value.isInitialized);
-    videoPlayer = _VideoPlayer(
-      castDialog: castDialog(),
-      isOpenCastDialog: isOpenCastDialog,
-      closeChromecast: () {
-        chromecastController?.closeSession();
-      },
-      castSessionState: sessionState,
-      aspectRatio:
-          fullScreen ? calculateAspectRatio(screenSize) : widget.aspectRatio,
-      controller: controller!,
-      appCastId: widget.appCastId,
-      toggleControls: toggleControls,
-      togglePlay: togglePlay,
-      videoSeek: "$videoSeek",
-      videoDuration: "$videoDuration",
-      videoStyle: videoStyle,
-      showMenu: showMenu,
-      wasLoading: _wasLoading,
-      fullScreen: fullScreen,
-      toggleFullScreen: toggleFullScreen,
-      onToNextVideo: widget.onToNextVideo,
-      screenSize: screenSize,
-      videoLoadingStyle: videoLoadingStyle,
-      startHideTimer: _startHideTimer,
-      cancelAndRestartTimer: cancelAndRestartTimer,
-      onDragStart: () {
-        _hideTimer?.cancel();
-      },
-      onTapCastBtn: _onTapCastBtn,
-    );
-    return videoPlayer;
+   return _VideoPlayer(
+     castDialog: castDialog(),
+     isOpenCastDialog: isOpenCastDialog,
+     closeChromecast: () {
+       chromecastController?.closeSession();
+     },
+     castSessionState: sessionState,
+     aspectRatio:
+     fullScreen ? calculateAspectRatio(screenSize) : widget.aspectRatio,
+     controller: controller!,
+     appCastId: widget.appCastId,
+     toggleControls: toggleControls,
+     togglePlay: togglePlay,
+     videoSeek: "$videoSeek",
+     videoDuration: "$videoDuration",
+     videoStyle: videoStyle,
+     showMenu: showMenu,
+     wasLoading: _wasLoading,
+     fullScreen: fullScreen,
+     toggleFullScreen: toggleFullScreen,
+     onToNextVideo: widget.onToNextVideo,
+     screenSize: screenSize,
+     videoLoadingStyle: videoLoadingStyle,
+     startHideTimer: _startHideTimer,
+     cancelAndRestartTimer: cancelAndRestartTimer,
+     onDragStart: () {
+       _hideTimer?.cancel();
+     },
+     onTapCastBtn: _onTapCastBtn,
+   );
   }
 
   void _onTapCastBtn() async {
@@ -263,9 +259,7 @@ class _SkzPlayerState extends State<SkzPlayer>
     if (controller!.value.isPlaying) {
       controller!.pause();
     }
-
     if (fullScreen) await Future.delayed(const Duration(milliseconds: 900));
-
     setState(() {
       isOpenCastDialog = true;
     });
@@ -285,30 +279,6 @@ class _SkzPlayerState extends State<SkzPlayer>
         });
       },
     );
-  }
-
-  void _enterFullScreen(BuildContext context) {
-    _overlayEntry = OverlayEntry(builder: (context) {
-      return Positioned.fill(
-          child: Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(child: videoPlayer),
-      ));
-    });
-
-    Overlay.of(context).insert(_overlayEntry!);
-    // Overlay.of(context).insert(
-    //   OverlayEntry(
-    //     builder: (context) => Positioned.fill(
-    //       child: videoPlayer(),
-    //     ),
-    //   ),
-    // );
-  }
-
-  void _exitFullScreen(BuildContext context) {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
   }
 
   static const int _bufferingInterval = 20000;
@@ -498,14 +468,12 @@ class _SkzPlayerState extends State<SkzPlayer>
 
   void toggleFullScreen() {
     if (fullScreen) {
-      _exitFullScreen(context);
       SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
           overlays: SystemUiOverlay.values);
     } else {
       SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft]);
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
-      _enterFullScreen(context);
     }
     _fullscreen = !_fullscreen;
   }
