@@ -256,10 +256,10 @@ class _SkzPlayerState extends State<SkzPlayer>
     if (fullScreen) toggleFullScreen();
     createHideControlBarTimer();
     chromecastController?.devicesNotifier.value = [];
+    if (fullScreen) await Future.delayed(const Duration(milliseconds: 900));
     if (controller!.value.isPlaying) {
       controller!.pause();
     }
-    if (fullScreen) await Future.delayed(const Duration(milliseconds: 900));
     setState(() {
       isOpenCastDialog = true;
     });

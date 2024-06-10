@@ -40,7 +40,7 @@ class ActionBar extends StatelessWidget {
                       child: Icon(
                         Icons.cast,
                         color: Colors.white,
-                        size: fullScreen ? 35 : 25,
+                        size: fullScreen ? 28 : 22,
                       ),
                     ),
                   ),
