@@ -31,13 +31,15 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        appBar: isFullScreen
-            ? null
-            : AppBar(title: const Text('SkzPlayer Example')),
+        appBar: AppBar(title: const Text('SkzPlayer Example')),
         body: Center(
           child: SkzPlayer(
+            videoTitle: "CustomTitle",
+            appCastId: "1E79D581",
             url: MyApp.url,
-            onFullScreen: setIsFullScreen,
+            position: (int position){
+              print("Position: $position");
+            },
           ),
         ),
       ),

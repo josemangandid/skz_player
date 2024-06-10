@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:skz_player/src/widgets/cast_btn.dart';
 
 class ActionBar extends StatelessWidget {
   const ActionBar({
@@ -6,13 +7,17 @@ class ActionBar extends StatelessWidget {
     required this.showMenu,
     required this.fullScreen,
     required this.toggleFullScreen,
-    required this.wasLoading
+    required this.wasLoading,
+    required this.onTapCastBtn,
+    this.appCastId,
   });
 
   final bool showMenu;
   final bool wasLoading;
   final bool fullScreen;
+  final String? appCastId;
   final Function() toggleFullScreen;
+  final Function() onTapCastBtn;
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +30,10 @@ class ActionBar extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  Container(
+                    width: 5,
+                  ),
+                  if(appCastId!= null)CastBtn(onTap: onTapCastBtn),
                   Container(
                     width: 5,
                   ),

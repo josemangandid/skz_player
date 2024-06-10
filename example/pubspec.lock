@@ -17,6 +17,54 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.11.0"
+  bonsoir:
+    dependency: transitive
+    description:
+      name: bonsoir
+      sha256: "9703ca3ce201c7ab6cd278ae5a530a125959687f59c2b97822f88a8db5bef106"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.1.9"
+  bonsoir_android:
+    dependency: transitive
+    description:
+      name: bonsoir_android
+      sha256: "19583ae34a5e5743fa2c16619e4ec699b35ae5e6cece59b99b1cf21c1b4ed618"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.1.4"
+  bonsoir_darwin:
+    dependency: transitive
+    description:
+      name: bonsoir_darwin
+      sha256: "985c4c38b4cbfa57ed5870e724a7e17aa080ee7f49d03b43e6d08781511505c6"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.1.2"
+  bonsoir_linux:
+    dependency: transitive
+    description:
+      name: bonsoir_linux
+      sha256: "65554b20bc169c68c311eb31fab46ccdd8ee3d3dd89a2d57c338f4cbf6ceb00d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.1.2"
+  bonsoir_platform_interface:
+    dependency: transitive
+    description:
+      name: bonsoir_platform_interface
+      sha256: "4ee898bec0b5a63f04f82b06da9896ae8475f32a33b6fa395bea56399daeb9f0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.1.2"
+  bonsoir_windows:
+    dependency: transitive
+    description:
+      name: bonsoir_windows
+      sha256: abbc90b73ac39e823b0c127da43b91d8906dcc530fc0cec4e169cf0d8c4404b1
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.1.4"
   boolean_selector:
     dependency: transitive
     description:
@@ -25,6 +73,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.1"
+  cast:
+    dependency: transitive
+    description:
+      path: "."
+      ref: "2.0.2"
+      resolved-ref: baba000f2bd8b22493b6ec0ae362569c448ba05f
+      url: "https://github.com/josemangandid/flutter_cast.git"
+    source: git
+    version: "2.0.0"
   characters:
     dependency: transitive
     description:
@@ -97,6 +154,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.0"
+  fixnum:
+    dependency: transitive
+    description:
+      name: fixnum
+      sha256: "25517a4deb0c03aa0f32fd12db525856438902d9c16536311e76cdc57b31d7d1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -271,6 +336,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.0.2"
+  protobuf:
+    dependency: transitive
+    description:
+      name: protobuf
+      sha256: "68645b24e0716782e58948f8467fd42a880f255096a821f9e7d0ec625b00c84d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.1.0"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -282,7 +355,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.0.2"
+    version: "0.0.3"
   source_span:
     dependency: transitive
     description:

@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:skz_player/src/source/video_loading_style.dart';
 import 'package:skz_player/src/source/video_style.dart';
@@ -24,7 +25,12 @@ class ControlsWidget extends StatelessWidget {
     required this.onDragEnd,
     required this.onTapDown,
     required this.onToNextVideo,
+    required this.onTapCastBtn,
     required this.videoStyle,
+    this.appCastId,
+    this.videoTitle,
+    required this.castDialog,
+    required this.isOpenCastDialog
   });
 
   final VideoPlayerController controller;
@@ -33,6 +39,7 @@ class ControlsWidget extends StatelessWidget {
   final bool fullScreen;
   final bool showMenu;
   final bool wasLoading;
+  final bool isOpenCastDialog;
   final Function() toggleControls;
   final Function() togglePlay;
   final Function() toggleFullScreen;
@@ -40,8 +47,12 @@ class ControlsWidget extends StatelessWidget {
   final Function() onDragStart;
   final Function() onDragEnd;
   final Function() onTapDown;
+  final Function() onTapCastBtn;
   final String videoSeek;
   final String videoDuration;
+  final String? appCastId;
+  final String? videoTitle;
+  final Widget castDialog;
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +65,8 @@ class ControlsWidget extends StatelessWidget {
         ),
         wasLoading ? style.loading : Container(),
         ActionBar(
+          appCastId: appCastId,
+          onTapCastBtn: onTapCastBtn,
           wasLoading: wasLoading,
           showMenu: showMenu,
           fullScreen: fullScreen,
@@ -78,7 +91,8 @@ class ControlsWidget extends StatelessWidget {
           wasLoading: wasLoading,
           fullScreen: fullScreen,
           showMenu: showMenu,
-        )
+        ),
+        if(isOpenCastDialog) castDialog
       ],
     );
   }
