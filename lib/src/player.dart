@@ -21,6 +21,8 @@ class SkzPlayer extends StatefulWidget {
   ///```
   final String url;
 
+  final Map<String, String> headers;
+
   final String? videoTitle;
 
   /// Google Cast Id
@@ -48,6 +50,7 @@ class SkzPlayer extends StatefulWidget {
   const SkzPlayer({
     super.key,
     required this.url,
+    required this.headers,
     this.aspectRatio = 16 / 9,
     this.startAt,
     this.appCastId,
@@ -394,7 +397,7 @@ class _SkzPlayerState extends State<SkzPlayer>
   }
 
   void videoInit(String? url) async {
-    controller = VideoPlayerController.networkUrl(Uri.parse(url!))
+    controller = VideoPlayerController.networkUrl(Uri.parse(url!), httpHeaders: widget.headers)
       ..initialize().then((value) {
         startAt();
         setState(() => hasInitError = false);

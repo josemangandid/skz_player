@@ -9,8 +9,8 @@ class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   static const String url =
-      "https://moodle1.myyschool.xyz/MXE1MDdTT3dhQUxwZEs2SDF6d2RHOXJFYVJ6NElFNUFVVEd4MjdiQWFWOWNqUDVyTU5aaGpzbnB1QlNoY2s0Rg.m3u8";
-  static const String url2 = "https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4";
+      "https://nika.playmudos.com/ZzRLL216cnlINGVGbEdMZGI0VzRTNXRCN2ZleGVtZEhxRnAyZHplaFU4T1ZBck0zclVmVWVsMkxZeEhHNExHaA.m3u8";
+  static const String referer = "https://jkanime.net/rekishi-ni-nokoru-akujo-ni-naru-zo/6/";
   @override
   State<MyApp> createState() => _MyAppState();
 }
@@ -37,6 +37,9 @@ class _MyAppState extends State<MyApp> {
             videoTitle: "CustomTitle",
             appCastId: "1E79D581",
             url: MyApp.url,
+            headers: const {
+              "Referer": MyApp.referer,
+            },
             onFullScreen: setIsFullScreen,
             position: (int position){
               print("Position: $position");
